@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Wealth Machine - Precision Build</title>
+    <style>
+        :root {
+            --cad-100: #a48f6c; --cad-50: #a46c6c; --cad-20: #6ca478; --cad-10: #9a6ca4; --cad-5: #0077B5;
+            --usd-green: #35654d; --usd-dark: #1b3022;
+            --gbp-50: #cf4647; --gbp-20: #8c6b9f; --gbp-10: #d68939; --gbp-5: #008f9c;
+            --aud-100: #5b9e4d; --aud-50: #e8c642; --aud-20: #cf4f36; --aud-10: #4a8bb8; --aud-5: #ba6e94;
+            --coin-silver: #dcdcdc; --coin-gold: #d6c175; --coin-bronze: #cd7f32; --dark: #2d3436;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: #fdfbf7; display: flex; flex-direction: column; align-items: center; padding: 20px; color: var(--dark); margin: 0; min-height: 100vh; }
+        .corner-controls { position: fixed; top: 20px; left: 20px; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; gap: 5px; z-index: 100; }
+        .flag-btn { font-size: 1.8rem; cursor: pointer; padding: 5px 12px; border-radius: 8px; border: 2px solid transparent; background: none; transition: all 0.2s ease; line-height: 1; }
+        .flag-btn.active { border-color: #2ecc71; background: #e8f5e9; }
+        
+        .header-box { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; margin-bottom: 10px; width: 100%; max-width: 600px; margin-top: 80px; }
+        input#inputAmount { font-size: 2.5rem; width: 250px; text-align: center; border: none; border-bottom: 4px solid var(--dark); margin: 10px 0; outline: none; background: transparent; }
+        .result-label { font-size: 1.4rem; font-weight: bold; color: #2ecc71; margin-top: 5px; }
+        
+        /* Slider Section */
+        .controls { width: 90%; max-width: 600px; margin-bottom: 25px; text-align: center; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .year-title { font-size: 4rem; font-weight: 900; margin: 0; line-height: 1; color: var(--dark); }
+        input[type="range"] { width: 100%; height: 12px; accent-color: #d63031; cursor: pointer; margin: 15px 0; }
+
+        .money-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; width: 90%; max-width: 900px; padding: 20px; background: #fff; border: 2px dashed #ccc; border-radius: 15px; min-height: 200px; }
+        .bill { height: 65px; border-radius: 4px; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 3px 3px 0px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.1); font-size: 1.1rem; position: relative; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .usa { background: var(--usd-green); border: 1px solid var(--usd-dark); }
+        .can.b100 { background: var(--cad-100); } .can.b50 { background: var(--cad-50); } .can.b20 { background: var(--cad-20); } .can.b10 { background: var(--cad-10); } .can.b5 { background: var(--cad-5); }
+        .gbp.b50 { background: var(--gbp-50); } .gbp.b20 { background: var(--gbp-20); } .gbp.b10 { background: var(--gbp-10); } .gbp.b5 { background: var(--gbp-5); }
+        .aud.b100 { background: var(--aud-100); } .aud.b50 { background: var(--aud-50); } .aud.b20 { background: var(--aud-20); } .aud.b10 { background: var(--aud-10); } .aud.b5 { background: var(--aud-5); }
+        .coin { width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; font-weight: bold; color: #555; box-shadow: 2px 2px 0px rgba(0,0,0,0.1); border: 1px solid #ccc; background: var(--coin-silver); margin: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="corner-controls">
+        <button class="flag-btn" onclick="setCountry('CAD', this)">🇨🇦</button>
+        <button class="flag-btn" onclick="setCountry('USD', this)">🇺🇸</button>
+        <button class="flag-btn active" onclick="setCountry('GBP', this)">🇬🇧</button>
+        <button class="flag-btn" onclick="setCountry('AUD', this)">🇦🇺</button>
+    </div>
+
+    <div class="header-box">
+        <div>If you had this much in <span id="label-year">1947</span>:</div>
+        <input type="number" id="inputAmount" value="100">
+        <div class="result-label">It's worth <span id="total-span">£5,000.26</span> today (2026)</div>
+    </div>
+
+    <div class="controls">
+        <p class="year-title" id="year-display">1947</p>
+        <input type="range" id="year-slider" min="1900" max="2026" value="1947">
+        <p>Drag to change the starting year</p>
+    </div>
+
+    <div class="money-grid" id="money-grid"></div>
+
+    <script>
+        let currentCountry = 'GBP'; 
+
+        const data = {
+            GBP: {
+                symbol: '£', class: 'gbp', denoms: [50, 20, 10, 5],
+                coins: [{v:2, n:'£2', c:'gold'}, {v:1, n:'£1', c:'gold'}, {v:0.5, n:'50p'}, {v:0.2, n:'20p'}, {v:0.1, n:'10p'}, {v:0.05, n:'5p'}, {v:0.01, n:'1p', c:'bronze'}],
+                // HIGH DENSITY RPI DATA POINTS
+                cpi: { 
+                    1900: 38.2, 1910: 41.1, 1920: 112.5, 1930: 71.4, 1940: 78.5, 
+                    1947: 100.0, 1950: 112.8, 1952: 136.0, 1955: 147.1, 1960: 168.4, 
+                    1965: 202.2, 1967: 215.57, 1969: 237.71, 1970: 252.8, 1980: 955.2, 
+                    1990: 1722.5, 2000: 2322.4, 2010: 3201.2, 2020: 4210.5, 2026: 5000.26 
+                }
+            },
+            AUD: {
+                symbol: '$', class: 'aud', denoms: [100, 50, 20, 10, 5],
+                coins: [{v:2, n:'$2', c:'gold'}, {v:1, n:'$1', c:'gold'}, {v:0.50, n:'50c'}, {v:0.20, n:'20c'}, {v:0.10, n:'10c'}, {v:0.05, n:'5c'}],
+                // HIGH DENSITY CPI DATA POINTS
+                cpi: { 
+                    1900: 42.0, 1910: 50.1, 1920: 85.0, 1930: 75.0, 1940: 82.5, 
+                    1947: 100.0, 1950: 125.4, 1960: 285.4, 1966: 450.2, 1970: 550.8, 
+                    1980: 1500.4, 1990: 2500.1, 2000: 2800.5, 2010: 3500.2, 2026: 4091.18 
+                }
+            },
+            USD: {
+                symbol: '$', class: 'usa', denoms: [100, 50, 20, 10, 5, 2, 1],
+                coins: [{v:0.25, n:'25¢'}, {v:0.10, n:'10¢'}, {v:0.05, n:'5¢'}, {v:0.01, n:'1¢', c:'bronze'}],
+                cpi: { 
+                    1900: 7.9, 1913: 9.9, 1920: 20.0, 1930: 16.7, 1940: 14.0, 
+                    1947: 22.3, 1950: 24.1, 1960: 29.6, 1970: 38.8, 1980: 82.4, 
+                    1990: 130.7, 2000: 172.2, 2010: 218.1, 2020: 258.8, 2026: 324.5 
+                }
+            },
+            CAD: {
+                symbol: '$', class: 'can', denoms: [100, 50, 20, 10, 5],
+                coins: [{v:2, n:'$2', c:'gold'}, {v:1, n:'$1', c:'gold'}, {v:0.25, n:'25¢'}, {v:0.10, n:'10¢'}, {v:0.05, n:'5¢'}, {v:0.01, n:'1¢', c:'bronze'}],
+                cpi: { 
+                    1900: 7.5, 1914: 10.0, 1920: 18.5, 1930: 15.1, 1940: 13.5, 
+                    1947: 17.2, 1950: 20.1, 1960: 27.2, 1970: 37.4, 1980: 82.3, 
+                    1990: 144.1, 2000: 184.2, 2010: 231.2, 2020: 284.5, 2026: 345.8 
+                }
+            }
+        };
+
+        function generateMap(obj) {
+            const years = Object.keys(obj).map(Number).sort((a,b) => a-b);
+            const fullMap = {};
+            for(let i=0; i < years.length - 1; i++) {
+                let sY = years[i], eY = years[i+1], sV = obj[sY], eV = obj[eY];
+                for(let y=sY; y < eY; y++) {
+                    fullMap[y] = sV + (eV - sV) * ((y - sY) / (eY - sY));
+                }
+            }
+            fullMap[years[years.length-1]] = obj[years[years.length-1]];
+            return fullMap;
+        }
+
+        Object.keys(data).forEach(k => data[k].cpi = generateMap(data[k].cpi));
+
+        function setCountry(code, el) {
+            currentCountry = code;
+            document.querySelectorAll('.flag-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            update();
+        }
+
+        const slider = document.getElementById('year-slider');
+        const amountIn = document.getElementById('inputAmount');
+        const grid = document.getElementById('money-grid');
+
+        function update() {
+            const year = parseInt(slider.value);
+            const cur = data[currentCountry];
+            const startAmt = parseFloat(amountIn.value) || 0;
+            const worth = startAmt * (cur.cpi[2026] / (cur.cpi[year] || cur.cpi[1900]));
+
+            document.getElementById('year-display').innerText = year;
+            document.getElementById('label-year').innerText = year;
+            document.getElementById('total-span').innerText = cur.symbol + worth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            grid.innerHTML = '';
+            let rem = worth, count = 0;
+            cur.denoms.forEach(d => {
+                while(rem >= d && count < 100) {
+                    const el = document.createElement('div');
+                    el.className = `bill ${cur.class} b${d}`;
+                    el.innerHTML = `<span>${cur.symbol}${d}</span>`;
+                    grid.appendChild(el);
+                    rem -= d; count++;
+                }
+            });
+            cur.coins.forEach(c => {
+                while(rem >= c.v - 0.005 && count < 150) {
+                    const el = document.createElement('div');
+                    el.className = `coin`;
+                    if(c.c === 'gold') el.style.background = 'var(--coin-gold)';
+                    if(c.c === 'bronze') el.style.background = 'var(--coin-bronze)';
+                    el.innerHTML = `<span>${c.n}</span>`;
+                    grid.appendChild(el);
+                    rem -= c.v; count++;
+                }
+            });
+        }
+
+        slider.addEventListener('input', update);
+        amountIn.addEventListener('input', update);
+        update();
+    </script>
+</body>
+</html>
