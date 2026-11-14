@@ -50,21 +50,12 @@
     </div>
   </div>
   <script src="https://player.vimeo.com/api/player.js"></script>
-        <p class="video-missing">No video found yet — add a file named <code>screenrecording.mp4</code> to this folder to replace this placeholder.</p>
       </div>
     </div>
   </div>
   <p class="video-caption">Extension demo: blocking ads and trackers live on a page.</p>
-  <script>
-    (function(){
-      var v = document.getElementById('proj-video');
-      var ph = document.getElementById('proj-placeholder');
-      v.addEventListener('loadedmetadata', function(){ v.style.display = 'block'; ph.style.display = 'none'; });
-      v.addEventListener('error', function(){ v.style.display = 'none'; ph.style.display = 'flex'; }, true);
-    })();
-  </script>
-
-    <div class="detail-body">
+ 
+  <div class="detail-body">
       <h2>About this project</h2>
       <p>A Chrome extension built from the manifest up — filtering rules to strip ads and trackers from pages as they load, plus a small popup UI for toggling it on and off per site. Built as a way to learn the extension APIs by shipping something actually useful.</p>
     </div>
